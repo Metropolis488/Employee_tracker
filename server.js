@@ -18,6 +18,13 @@ connection.connect(function(err) {
 });
 
 function springApp() {
+    // view queries
+    const viewEmp = "SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name FROM ((employee inner JOIN role ON employee.role_id = role.id) inner JOIN department ON role.department_id = department.id);";
+    const viewDept = "SELECT id, name FROM department;";
+    const viewRole = "SELECT department_id, title, salary FROM role;";
+    // remove queries
+    const removeEmp = "SELECT id, first_name, last_name FROM employee";
+    const deleteRole = "SELECT id, title, salary FROM role";
     inquirer
     .prompt({
         name: "firstQ",
@@ -39,13 +46,13 @@ function springApp() {
     .then(function(answer){
         switch (answer.firstQ) {
         case "View all employees": 
-            viewAllEmployees(); 
+            viewTables(viewEmp); 
             break;
         case "View all departments":
-            departments();
+            viewTables(viewDept);
             break;
         case "View all roles":
-            roles();
+            viewTables(viewRole);
             break;
         case "Add employee":
             addEmployee();
@@ -57,13 +64,13 @@ function springApp() {
             addRole();
             break;
         case "Remove employee":
-            removeEmployee();
+            removeEntry(removeEmp, "employee");
             break;
         case "Remove department":
-            removeDept();
+            removeEntry(viewDept, "department");
             break;
         case "Remove role":
-            removeRole();
+            removeEntry(deleteRole, "role");
             break;        
         case "Exit":
             connection.end();
@@ -72,8 +79,7 @@ function springApp() {
     });
 }
 
-function viewAllEmployees() {
-    var query = "SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name FROM ((employee inner JOIN role ON employee.role_id = role.id) inner JOIN department ON role.department_id = department.id);";
+function viewTables(query) {
     connection.query(query, function(err, res) {
         if (err) throw err;
         console.log("\n")
@@ -82,29 +88,10 @@ function viewAllEmployees() {
     })
 }
 
-function departments() {
-    var query = "select id, name from department;";
-    connection.query(query, function(err, res) {
-        if (err) throw err;
-        console.log("\n")
-        console.log(cTable.getTable(res));
-        springApp();
-    })
-}
-function roles() {
-    var query = "select department_id, title, salary from role;";
-    connection.query(query, function(err, res) {
-        if (err) throw err;
-        console.log("\n")
-        console.log(cTable.getTable(res));
-        springApp();
-    })
-}
 
 function addEmployee() {
     var query = "SELECT title, id FROM role;";
     connection.query(query, function(err, res) {
-        // var roleList = res.json({ id: res.department_id, title: res.title });
         var rawResp = res;
         var roleList = [];
         var roleId;
@@ -112,6 +99,7 @@ function addEmployee() {
         for (var i = 0; i < res.length; i++) {
             roleList.push(res[i].title);
         }
+        console.log(res);
 
     askEmployee();
     async function askEmployee() {
@@ -138,24 +126,48 @@ function addEmployee() {
         [answer.first, answer.last, roleId], function (err, res) {
             if (err) throw err;
         })
-        inquirer.prompt([
-            {
-                type: "list",
-                message: "Would you like to perform another action?",
-                name: "continue",
-                choices: [
-                    "Yes",
-                    "No"
-                ]
-            }
-        ])
-        .then(function(answer) {
-            switch (answer.continue) {
-                case "Yes": springApp(); break;
-                case "No": connection.end(); break;
-            }
-        })
+        closingPrompt();        
     })
     }   
+    })
+}
+
+function removeEntry(query, tableName) {
+    connection.query(query, function(err, res) {
+        if (err) throw err;
+        console.log("\n")
+        console.log(cTable.getTable(res));
+    })
+    inquirer.prompt([
+        {
+            message: "Please enter the ID of the entry you would like to delete.",
+            name: "deleteID"
+        }
+    ])
+    .then(function(answer) {
+        connection.query("DELETE FROM ?? where id = ?", [tableName, answer.deleteID], function(err, res) {
+            if (err) throw err;
+        })
+        closingPrompt();
+    })
+}
+
+function closingPrompt() {
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Would you like to perform another action?",
+            name: "continue",
+            choices: [
+                "Yes",
+                "No"
+            ]
+        }
+    ])
+    .then(function(answer) {
+        switch (answer.continue) {
+            case "Yes": springApp(); break;
+            case "No": connection.end(); break;
+        }
     })
 }
