@@ -157,7 +157,6 @@ function addRole() {
         for (var i = 0; i < res.length; i++) {
             roleList2.push({id: res[i].id, name: res[i].name});
         }
-        console.log(roleList2);
         rolePrompts();
     
     function rolePrompts() {
