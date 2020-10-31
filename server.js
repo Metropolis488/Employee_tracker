@@ -100,3 +100,62 @@ function roles() {
         springApp();
     })
 }
+
+function addEmployee() {
+    var query = "SELECT title, id FROM role;";
+    connection.query(query, function(err, res) {
+        // var roleList = res.json({ id: res.department_id, title: res.title });
+        var rawResp = res;
+        var roleList = [];
+        var roleId;
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            roleList.push(res[i].title);
+        }
+
+    askEmployee();
+    async function askEmployee() {
+    // const {first, last, role} = 
+    await inquirer.prompt([
+       {
+            message: "What is the new employees first name?",
+            name: "first"
+       },
+       {
+            message: "What is the new employees last name?",
+            name: "last"
+       },
+       {
+            type: "list",   
+            message: "What is the employees role?",
+            name: "role",
+            choices: roleList
+       }
+    ])
+    .then(function(answer) {
+        roleId = rawResp[roleList.indexOf(answer.role)].id;
+        connection.query("INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)", 
+        [answer.first, answer.last, roleId], function (err, res) {
+            if (err) throw err;
+        })
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Would you like to perform another action?",
+                name: "continue",
+                choices: [
+                    "Yes",
+                    "No"
+                ]
+            }
+        ])
+        .then(function(answer) {
+            switch (answer.continue) {
+                case "Yes": springApp(); break;
+                case "No": connection.end(); break;
+            }
+        })
+    })
+    }   
+    })
+}
