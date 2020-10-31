@@ -2,6 +2,7 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 var cTable = require("console.table");
 const password = require("./test");
+const { restoreDefaultPrompts } = require("inquirer");
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -145,6 +146,52 @@ function addDept() {
             closingPrompt();
         })
     })
+}
+
+function addRole() {
+    connection.query("SELECT id, name FROM department", function(err, res) {
+        var roleList2 = [];
+        var deptID;
+        if (err) throw err;
+        console.log(cTable.getTable(res));
+        for (var i = 0; i < res.length; i++) {
+            roleList2.push({id: res[i].id, name: res[i].name});
+        }
+        console.log(roleList2);
+        rolePrompts();
+    
+    function rolePrompts() {
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Please select a department for this role",
+                name: "deptName",
+                choices: roleList2
+            },
+            {
+                message: "What is this role's title?",
+                name: "roleName"
+            },
+            {
+                message: "What is the salary for this role? (enter numbers only, no dollar sign or comma)",
+                name: "rolePay"
+            }
+        ])
+        .then(function(answer) {
+            for (var i = 0; i < roleList2.length; i++) {
+                if (answer.deptName == roleList2[i].name) {
+                    deptID = roleList2[i].id;
+                }
+            }
+            // console.log(test);
+            connection.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [answer.roleName, answer.rolePay, deptID], function(err, res) {
+                if (err) throw err;
+                console.log(`You have created the ${answer.roleName} role`);
+                closingPrompt();
+            })
+        })
+    }
+})
 }
 
 function removeEntry(query, tableName) {
