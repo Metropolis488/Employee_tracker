@@ -132,12 +132,29 @@ function addEmployee() {
     })
 }
 
+function addDept() {
+    inquirer.prompt([
+        {
+            message: "Enter the name of the new department.",
+            name: "newDept"
+        }
+    ]).then(function(answer) {
+        connection.query("INSERT INTO department (name) VALUES (?)", [answer.newDept], function(err, res) {
+            if (err) throw err;
+            console.log(`Success! The ${answer.newDept} department has been added.`);
+            closingPrompt();
+        })
+    })
+}
+
 function removeEntry(query, tableName) {
     connection.query(query, function(err, res) {
         if (err) throw err;
         console.log("\n")
         console.log(cTable.getTable(res));
+        deleteingPrompt();
     })
+    function deleteingPrompt() {
     inquirer.prompt([
         {
             message: "Please enter the ID of the entry you would like to delete.",
@@ -150,6 +167,7 @@ function removeEntry(query, tableName) {
         })
         closingPrompt();
     })
+}
 }
 
 function closingPrompt() {
