@@ -162,7 +162,6 @@ function addEmployee() {
         for (var i = 0; i < res.length; i++) {
             roleList.push(res[i].title);
         }
-        console.log(res);
 
     askEmployee();
     async function askEmployee() {
@@ -243,7 +242,6 @@ function addRole() {
                     deptID = roleList2[i].id;
                 }
             }
-            // console.log(test);
             connection.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [answer.roleName, answer.rolePay, deptID], function(err, res) {
                 if (err) throw err;
                 console.log(`You have created the ${answer.roleName} role`);
@@ -272,8 +270,8 @@ function removeEntry(query, tableName) {
         connection.query("DELETE FROM ?? where id = ?", [tableName, answer.deleteID], function(err, res) {
             if (err) throw err;
             console.log("Your entry has been removed.")
+            closingPrompt();
         })
-        closingPrompt();
     })
 }
 }
