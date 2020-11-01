@@ -271,6 +271,7 @@ function removeEntry(query, tableName) {
     .then(function(answer) {
         connection.query("DELETE FROM ?? where id = ?", [tableName, answer.deleteID], function(err, res) {
             if (err) throw err;
+            console.log("Your entry has been removed.")
         })
         closingPrompt();
     })
