@@ -35,6 +35,7 @@ function springApp() {
             "View all employees",
             "View all departments",
             "View all roles",
+            "Change employee role",
             "Add employee",
             "Add department",
             "Add role",
@@ -55,6 +56,9 @@ function springApp() {
         case "View all roles":
             viewTables(viewRole);
             break;
+        case "Change employee role":
+            updateRole(removeEmp);
+            break;
         case "Add employee":
             addEmployee();
             break;
@@ -62,7 +66,7 @@ function springApp() {
             addDept();
             break;
         case "Add role":
-            addRole();
+            addRole(removeEmp);
             break;
         case "Remove employee":
             removeEntry(removeEmp, "employee");
@@ -89,6 +93,64 @@ function viewTables(query) {
     })
 }
 
+function updateRole(query) {
+    connection.query(query, function(err, res) {
+        if (err) throw err;
+        console.log("\n")
+        console.log(cTable.getTable(res));
+        updateHuman();
+
+    function updateHuman() {
+        inquirer.prompt([
+            {
+                message: "Please enter ID of employee whose role you wish to change.",
+                name: "person"
+            }
+        ])
+        .then(function(answer) {
+            whichRole(answer.person);
+        })
+    } 
+    })
+}
+ 
+function whichRole(newRoleEmployeeID) {
+    connection.query("SELECT id, title FROM role;", function(err, res) {
+        var roleList3 = [];
+        var titlesOnly = [];
+        var newRoleID;
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            roleList3.push({id: res[i].id, title: res[i].title})
+            titlesOnly.push(res[i].title)
+        }
+        updateRolePt2();
+        
+    function updateRolePt2() {
+        
+        inquirer.prompt([
+            {
+                type: "list",
+                name: "chosenRole",
+                message: "Please select the new role for this employee",
+                choices: titlesOnly
+            }
+        ])
+        .then(function(answer) {
+            for (var i = 0; i < roleList3.length; i++) {
+                if (roleList3[i].title == answer.chosenRole) {
+                    newRoleID = roleList3[i].id;
+                }
+            }
+            connection.query("UPDATE employee SET role_id = ? WHERE id = ?", [newRoleID, newRoleEmployeeID], function(err, res) {
+                if (err) throw err;
+                console.log("You have updated this employees role");
+                closingPrompt();
+            })
+        })
+    }
+    })
+}
 
 function addEmployee() {
     var query = "SELECT title, id FROM role;";
@@ -104,7 +166,6 @@ function addEmployee() {
 
     askEmployee();
     async function askEmployee() {
-    // const {first, last, role} = 
     await inquirer.prompt([
        {
             message: "What is the new employees first name?",
